@@ -400,7 +400,7 @@ emulate_escript_foldl(Fun, Acc, File) ->
     end.
 
 vcs_vsn_1(Vcs, Dir) ->
-    case vcs_vsn_cmd(Vcs) of
+    case vcs_vsn_cmd(Vcs, Dir) of
         {unknown, VsnString} ->
             ?DEBUG("vcs_vsn: Unknown VCS atom in vsn field: ~p\n", [Vcs]),
             VsnString;
@@ -432,8 +432,8 @@ vcs_vsn_1(Vcs, Dir) ->
             end
     end.
 
-vcs_vsn_cmd(git) ->
-    case rebar_rel_utils:is_rel_dir() of
+vcs_vsn_cmd(git, Dir) ->
+    case rebar_rel_utils:is_rel_dir(Dir) of
         false ->
             %% git describe the last commit that touched CWD to make
             %% sure we use local (CWD) history.
@@ -452,11 +452,11 @@ vcs_vsn_cmd(git) ->
             %% Use global history (not CWD) git describe if in a rel_dir
             "git describe --always --tags"
     end;
-vcs_vsn_cmd(hg)  -> "hg identify -i";
-vcs_vsn_cmd(bzr) -> "bzr revno";
-vcs_vsn_cmd(svn) -> "svnversion";
-vcs_vsn_cmd({cmd, _Cmd}=Custom) -> Custom;
-vcs_vsn_cmd(Version) -> {unknown, Version}.
+vcs_vsn_cmd(hg, _Dir)  -> "hg identify -i";
+vcs_vsn_cmd(bzr, _Dir) -> "bzr revno";
+vcs_vsn_cmd(svn, _Dir) -> "svnversion";
+vcs_vsn_cmd({cmd, _Cmd}=Custom, _Dir) -> Custom;
+vcs_vsn_cmd(Version, _Dir) -> {unknown, Version}.
 
 vcs_vsn_invoke(Cmd, Dir) ->
     {ok, VsnString} = rebar_utils:sh(Cmd, [{cd, Dir}, {use_stdout, false}]),
